@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  api-diff:
+    build: .
+    container_name: api-diff-prod
+    restart: unless-stopped
+    ports:
+      - "8009:8009"
+    env_file:
+      - .env
+    volumes:
+      - ./reportes:/app/reportes
+      - ./images:/app/images
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://192.168.0.250:8009/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - api-diff-network
+
+networks:
+  api-diff-network:
+    driver: bridge
