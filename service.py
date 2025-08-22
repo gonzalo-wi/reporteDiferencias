@@ -8,13 +8,13 @@ from datetime import datetime, timedelta, date
 from typing import Dict, Iterable, List, Tuple
 
 import requests
-from zoneinfo import ZoneInfo
+import pytz
 
 from constants import DEFAULT_TIMEOUT, MAX_RETRIES, RETRY_DELAY
 from settings import settings
 
 
-TZ = ZoneInfo(settings.TZ)
+TZ = pytz.timezone(settings.TZ)
 RE_NUM = re.compile(r"\b(\d{1,4})\b")
 
 
@@ -28,13 +28,19 @@ def previous_day_range(now: datetime) -> Tuple[str, str, str]:
     Returns:
         Tupla con (fecha_inicio_iso, fecha_fin_iso, fecha_simple_iso).
     """
-    yesterday = (now.astimezone(TZ) - timedelta(days=1)).date()
-    start_time = datetime(
-        yesterday.year, yesterday.month, yesterday.day, 0, 0, 0, tzinfo=TZ
-    ).isoformat()
-    end_time = datetime(
-        yesterday.year, yesterday.month, yesterday.day, 23, 59, 59, tzinfo=TZ
-    ).isoformat()
+    # Convertir a timezone local si no tiene timezone
+    if now.tzinfo is None:
+        now = TZ.localize(now)
+    else:
+        now = now.astimezone(TZ)
+    
+    yesterday = (now - timedelta(days=1)).date()
+    start_time = TZ.localize(datetime(
+        yesterday.year, yesterday.month, yesterday.day, 0, 0, 0
+    )).isoformat()
+    end_time = TZ.localize(datetime(
+        yesterday.year, yesterday.month, yesterday.day, 23, 59, 59
+    )).isoformat()
     return start_time, end_time, yesterday.isoformat()
 
 
